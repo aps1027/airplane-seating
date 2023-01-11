@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Airplane seatng algorithm</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      td {
+        border: 1px solid black;
+        padding: 10px;
+        color: white;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+      }
+
+      .flex-container {
+        display: flex;
+      }
+
+      .flex-container > div {
+        padding: 10px;
+      }
+
+      .window-seat {
+        background-color: forestgreen;
+      }
+
+      .middle-seat {
+        background-color: brown;
+      }
+
+      .aisle-seat {
+        background-color: cornflowerblue;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form>
+      <div>
+        <label for="row_col_input">Rows and columns</label>
+        <input id="row_col_input" type="text" />
+      </div>
+      <div>
+        <label for="no_passenger_input">Number of passengers</label>
+        <input id="no_passenger_input" type="number" />
+      </div>
+      <input id="arrange_btn" type="button" value="Arrange" />
+    </form>
+    <div id="plane" class="flex-container"></div>
+    <script>
+      const PLANE_CLASS = {
+        AISLE: 1,
+        WINDOW: 2,
+        MIDDLE: 3,
+      };
+
+      /**
+       * check row and column is valid or not
+       * if not, return empty array
+       * if valid, return user input array
+       */
+      function checkRowColumnInput(input) {
+        try {
+          let array = JSON.parse(input);
+          if (
+            Array.isArray(array) &&
+            array.every((item) => Array.isArray(item))
+          ) {
+            return array;
+          }
+          return [];
+        } catch {
+          alert("error");
+          return [];
+        }
+      }
+
+      /**
+       * create seat object
+       * return a seat
+       */
+      function createSeat(section, column, row, planeClass, number = "") {
+        return {
+          section: section,
+          column: column,
+          row: row,
+          planeClass: planeClass,
+          number: number,
+        };
+      }
+
+      // if user clicks "Arrange Btn"
+      arrange_btn.onclick = function () {
+        // clear table
+        plane.innerHTML = "";
+
+        // get user input
+        let noOfPassenger = no_passenger_input.value;
+        let rowCol = checkRowColumnInput(row_col_input.value);
+        if (rowCol.length && noOfPassenger > 0) {
+          let seats = [];
+          let seat;
+          // prepare empty seats
+          for (let section = 0; section < rowCol.length; section++) {
+            for (let col = 0; col < rowCol[section][0]; col++) {
+              for (let row = 0; row < rowCol[section][1]; row++) {
+                if (section === 0 && col === 0) {
+                  seat = createSeat(section, col, row, PLANE_CLASS.WINDOW);
+                  seats.push(seat);
+                } else if (
+                  section === rowCol.length - 1 &&
+                  col === rowCol[section][0] - 1
+                ) {
+                  seat = createSeat(section, col, row, PLANE_CLASS.WINDOW);
+                  seats.push(seat);
+                } else if (col === 0 || col === rowCol[section][0] - 1) {
+                  seat = createSeat(section, col, row, PLANE_CLASS.AISLE);
+                  seats.push(seat);
+                } else {
+                  seat = createSeat(section, col, row, PLANE_CLASS.MIDDLE);
+                  seats.push(seat);
+                }
+              }
+            }
+          }
+          // set passenger nunber
+          seats.sort((a, b) => a["row"] - b["row"]);
+          seats.sort((a, b) => a["planeClass"] - b["planeClass"]);
+          if (seats.length >= noOfPassenger) {
+            for (let index = 0; index < seats.length; index++) {
+              seats[index].number = index + 1;
+              if (index === noOfPassenger - 1) index = seats.length;
+            }
+
+            seats.sort((a, b) => a["column"] - b["column"]);
+            seats.sort((a, b) => a["row"] - b["row"]);
+            seats.sort((a, b) => a["section"] - b["section"]);
+
+            // show tables for each section
+            let div, table, tr, td;
+            let passengerCount = 0;
+            for (let section = 0; section < rowCol.length; section++) {
+              div = document.createElement("div");
+              table = document.createElement("table");
+              div.appendChild(table);
+              for (let row = 0; row < rowCol[section][1]; row++) {
+                tr = document.createElement("tr");
+                for (let col = 0; col < rowCol[section][0]; col++) {
+                  td = document.createElement("td");
+                  if (seats[passengerCount].planeClass === PLANE_CLASS.AISLE) {
+                    td.setAttribute("class", "aisle-seat");
+                  }
+                  else if (seats[passengerCount].planeClass === PLANE_CLASS.WINDOW) {
+                    td.setAttribute("class", "window-seat");
+                  }
+                  else if (seats[passengerCount].planeClass === PLANE_CLASS.MIDDLE) {
+                    td.setAttribute("class", "middle-seat");
+                  }
+
+                  td.innerText = seats[passengerCount].number;
+                  tr.appendChild(td);
+                  passengerCount++;
+                }
+                table.appendChild(tr);
+              }
+              plane.appendChild(div);
+            }
+          } else {
+            alert("Enter Valid Input!!!");
+          }
+        } else {
+          alert("Enter Valid Input!!!");
+        }
+      };
+    </script>
+  </body>
+</html>
